@@ -254,7 +254,7 @@ int wifi_start_hostapd()
      */
     pi = __system_property_find(HOSTAPD_PROP_NAME);
     if (pi != NULL) {
-        serial = pi->serial;
+        serial = __system_property_serial(pi);
     }
 #endif
     property_set("ctl.start", HOSTAPD_NAME);
@@ -269,7 +269,7 @@ int wifi_start_hostapd()
             __system_property_read(pi, NULL, supp_status);
             if (strcmp(supp_status, "running") == 0) {
                 return 0;
-            } else if (pi->serial != serial &&
+            } else if (__system_property_serial(pi) != serial &&
                     strcmp(supp_status, "stopped") == 0) {
                 return -1;
             }
@@ -445,7 +445,7 @@ int SoftapController::getPrivFuncNum(char *iface, const char *fname) {
 }
 #endif
 
-int startDriver(char *iface) {
+int SoftapController::startDriver(const char *iface) {
 	struct iwreq wrq;
 	int fnum, ret;
 	
@@ -502,7 +502,7 @@ int startDriver(char *iface) {
 	return ret;
 }
 
-int stopDriver(char *iface) {
+int SoftapController::stopDriver(const char *iface) {
 	struct iwreq wrq;
 	int fnum, ret;
 	

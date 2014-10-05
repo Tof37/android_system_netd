@@ -28,18 +28,24 @@
 #define AP_CHANNEL_DEFAULT	6
 
 class SoftapController {
+    pid_t mPid;
+    int mSock;
+
+    int addParam(int pos, const char *cmd, const char *arg);
+    int setCommand(char *iface, const char *fname, unsigned buflen=0);
 public:
     SoftapController();
     virtual ~SoftapController();
 
+		int startDriver(const char *iface);
+    int stopDriver(const char *iface);
     int startSoftap();
     int stopSoftap();
+		void generatePsk(char *ssid, char *passphrase, char *psk);
     bool isSoftapStarted();
     int setSoftap(int argc, char *argv[]);
     int fwReloadSoftap(int argc, char *argv[]);
-private:
-    pid_t mPid;
-    void generatePsk(char *ssid, char *passphrase, char *psk);
+		int clientsSoftap(char **retbuf);
 };
 
 #endif
