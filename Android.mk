@@ -19,7 +19,6 @@ LOCAL_SRC_FILES:=                                      \
                   PppController.cpp                    \
                   ResolverController.cpp               \
                   SecondaryTableController.cpp         \
-                  SoftapController.cpp                 \
                   TetherController.cpp                 \
                   oem_iptables_hook.cpp                \
                   UidMarkMap.cpp                       \
@@ -38,13 +37,26 @@ LOCAL_C_INCLUDES := $(KERNEL_HEADERS) \
 
 LOCAL_CFLAGS := -Werror=format
 
-ifdef USES_TI_MAC80211
-LOCAL_CFLAGS += -DSINGLE_WIFI_FW
-endif
-
 LOCAL_SHARED_LIBRARIES := libstlport libsysutils liblog libcutils libnetutils \
                           libcrypto libhardware_legacy libmdnssd libdl \
                           liblogwrap
+
+ifdef USES_TI_MAC80211
+  LOCAL_SRC_FILES += SoftapControllerTI.cpp
+else ifeq ($(WIFI_DRIVER_MODULE_NAME),ar6000)
+  ifneq ($(WIFI_DRIVER_MODULE_PATH),rfkill)
+    LOCAL_CFLAGS += -DWIFI_MODULE_PATH=\"$(WIFI_DRIVER_MODULE_PATH)\"
+  endif
+  LOCAL_C_INCLUDES += external/wpa_supplicant_8/src/common
+  LOCAL_SRC_FILES += SoftapControllerATH.cpp
+  LOCAL_SHARED_LIBRARIES := $(LOCAL_SHARED_LIBRARIES) libwpa_client
+else
+  LOCAL_SRC_FILES += SoftapController.cpp
+endif
+
+ifdef WIFI_DRIVER_MODULE_AP_ARG
+  LOCAL_CFLAGS += -DWIFI_DRIVER_MODULE_AP_ARG=\"$(WIFI_DRIVER_MODULE_AP_ARG)\"
+endif
 
 ifneq ($(BOARD_HOSTAPD_DRIVER),)
   LOCAL_CFLAGS += -DHAVE_HOSTAPD
@@ -58,6 +70,14 @@ ifeq ($(BOARD_HAS_QCOM_WLAN_SDK), true)
   LOCAL_CFLAGS += -DQSAP_WLAN
   LOCAL_SHARED_LIBRARIES += libqsap_sdk
   LOCAL_C_INCLUDES += $(LOCAL_PATH)/../qcom/softap/sdk/
+endif
+
+ifeq ($(BOARD_HAVE_LEGACY_HOSTAPD),true)
+  LOCAL_CFLAGS += -DHAVE_LEGACY_HOSTAPD
+endif
+
+ifeq ($(BOARD_WLAN_NO_FWRELOAD),true)
+  LOCAL_CFLAGS += -DWLAN_NO_FWRELOAD
 endif
 
 include $(BUILD_EXECUTABLE)
